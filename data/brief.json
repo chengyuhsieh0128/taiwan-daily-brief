@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-14T00:44:45+08:00",
+  "generated_at": "2026-10-14T00:52:23+08:00",
   "date": "2026-10-14",
   "window": "06-24",
   "brief": "新莊無雨(最高20%)、大安無雨(最高20%)；氣溫22-28°C；不用帶傘。頭條：保加利亞黑海岸外船舶遭無人機擊沉；烏克蘭前總司令：俄軍進攻能力受挫。",
@@ -283,5 +283,70 @@
         "link": "https://www.cna.com.tw/news/aopl/202610130291.aspx"
       }
     ]
+  },
+  "market": {
+    "outlook": "中性偏多",
+    "score": 16,
+    "score_range": [
+      -16,
+      16
+    ],
+    "risk_flags": [
+      "台股高於年線 24.6%，漲幅過熱",
+      "美10年期殖利率 5.23%，一個月升 27bp",
+      "台幣一個月貶值 1.7%，外資匯損壓力"
+    ],
+    "as_of": {
+      "TAIEX": "2026-10-12",
+      "SPX": "2026-10-13",
+      "VIX": "2026-10-13",
+      "US10Y": "2026-10-13",
+      "USDTWD": "2026-10-14"
+    },
+    "taiex": {
+      "last": 49301.96,
+      "vs_ma60_pct": 7.7,
+      "vs_ma200_pct": 24.6,
+      "ret_1m_pct": 4.7,
+      "ret_3m_pct": 8.7,
+      "drawdown_from_52w_high_pct": -1.0,
+      "score": 5,
+      "signals": {
+        "above_ma200": 1,
+        "above_ma60": 1,
+        "ma20_above_ma60": 1,
+        "ret_1m_positive": 1,
+        "drawdown": 1
+      }
+    },
+    "spx": {
+      "last": 7803.59,
+      "vs_ma60_pct": 1.8,
+      "vs_ma200_pct": 7.5,
+      "ret_1m_pct": 2.4,
+      "ret_3m_pct": 3.1,
+      "drawdown_from_52w_high_pct": -0.2,
+      "score": 5,
+      "signals": {
+        "above_ma200": 1,
+        "above_ma60": 1,
+        "ma20_above_ma60": 1,
+        "ret_1m_positive": 1,
+        "drawdown": 1
+      }
+    },
+    "vix": {
+      "last": 15.42,
+      "score": 1
+    },
+    "us10y": {
+      "last_pct": 5.23,
+      "chg_1m_bp": 27
+    },
+    "usdtwd": {
+      "last": 32.17,
+      "chg_1m_pct": 1.7
+    },
+    "method": "規則式趨勢評分(站上季線/年線、均線多排、近一月漲跌、距52週高點、VIX)，台股權重2、美股權重1；風險旗標(過熱、殖利率上升、台幣轉弱)達2項以上則把偏多降為中性偏多。門檻為經驗設定、未經回測驗證，為趨勢判讀而非預測，非投資建議"
   }
 }
