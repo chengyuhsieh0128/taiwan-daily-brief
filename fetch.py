@@ -1,6 +1,7 @@
 """每日抓取氣象署鄉鎮預報與中央社頭條，輸出 data/brief.json。僅用標準庫。"""
 import json
 import os
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -14,13 +15,13 @@ DISTRICTS = [
     ("大安", "大安區", "F-D0047-061"),
 ]
 NEWS_FEEDS = [
-    ("政治", "https://feeds.feedburner.com/rsscna/politics"),
-    ("國際", "https://feeds.feedburner.com/rsscna/intworld"),
-    ("財經", "https://feeds.feedburner.com/rsscna/finance"),
-    ("社會", "https://feeds.feedburner.com/rsscna/social"),
+    ("國際", "https://feeds.feedburner.com/rsscna/intworld", 8),
+    ("兩岸", "https://feeds.feedburner.com/rsscna/mainland", 4),
+    ("財經", "https://feeds.feedburner.com/rsscna/finance", 10),
 ]
-NEWS_MAX_AGE_H = 36
-NEWS_PER_CATEGORY = 3
+NEWS_MAX_AGE_H = 30
+NEWS_SKIP = ("539", "樂透", "威力彩", "賓果", "刮刮樂", "彩券", "開獎")
+SUMMARY_MAX = 110
 RAIN_POP = 30
 UMBRELLA_POP = 40
 DAY_START, DAY_END = 6, 24
@@ -133,7 +134,7 @@ def fetch_news():
     """中央社官方分類 RSS；只收 NEWS_MAX_AGE_H 小時內的新聞，避免舊源混入。"""
     now = datetime.now(TZ)
     items, errors = [], []
-    for category, url in NEWS_FEEDS:
+    for category, url, limit in NEWS_FEEDS:
         try:
             root = ET.fromstring(http_get(url))
         except Exception as exc:  # noqa: BLE001
@@ -143,21 +144,24 @@ def fetch_news():
         for it in root.iter("item"):
             title = (it.findtext("title") or "").strip()
             pub = it.findtext("pubDate")
-            if not title or not pub:
+            if not title or not pub or any(k in title for k in NEWS_SKIP):
                 continue
             published = parsedate_to_datetime(pub).astimezone(TZ)
             if now - published > timedelta(hours=NEWS_MAX_AGE_H):
                 continue
+            summary = re.sub(r"<[^>]+>", "", it.findtext("description") or "")
+            summary = re.sub(r"^（[^）]*）", "", summary.strip()).strip()
             items.append(
                 {
                     "category": category,
                     "title": title,
+                    "summary": summary[:SUMMARY_MAX],
                     "published": published.isoformat(timespec="minutes"),
                     "link": (it.findtext("link") or "").strip(),
                 }
             )
             taken += 1
-            if taken >= NEWS_PER_CATEGORY:
+            if taken >= limit:
                 break
     items.sort(key=lambda x: x["published"], reverse=True)
     out = {"source": "中央社 RSS (feeds.feedburner.com/rsscna)", "items": items}
@@ -182,7 +186,7 @@ def build_text(districts, news):
     text = "；".join(["、".join(parts), temp, umb]) + "。"
     budget = 100 - len(text) - len("頭條：。")
     heads = []
-    order = [c for c, _ in NEWS_FEEDS]
+    order = [c for c, _, _ in NEWS_FEEDS]
     ranked = sorted(news["items"], key=lambda x: order.index(x["category"]))
     for item in ranked[:2]:
         h = item["title"][: min(16, max(budget, 0))].rstrip(" ，、；：-")
