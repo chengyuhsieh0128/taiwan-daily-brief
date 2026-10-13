@@ -170,6 +170,104 @@ def fetch_news():
     return out
 
 
+MARKET_SYMBOLS = {
+    "TAIEX": "^TWII",
+    "SPX": "^GSPC",
+    "VIX": "^VIX",
+    "US10Y": "^TNX",
+    "USDTWD": "TWD=X",
+}
+
+
+def yahoo_closes(symbol):
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?range=1y&interval=1d"
+    r = json.loads(http_get(url, timeout=30))["chart"]["result"][0]
+    pairs = [
+        (ts, c)
+        for ts, c in zip(r["timestamp"], r["indicators"]["quote"][0]["close"])
+        if c is not None
+    ]
+    as_of = datetime.fromtimestamp(pairs[-1][0], TZ).strftime("%Y-%m-%d")
+    return [c for _, c in pairs], as_of
+
+
+def sma(vals, n):
+    return sum(vals[-n:]) / n
+
+
+def index_stats(closes):
+    last = closes[-1]
+    ma20, ma60, ma200 = sma(closes, 20), sma(closes, 60), sma(closes, 200)
+    ret_1m = last / closes[-22] - 1
+    ret_3m = last / closes[-64] - 1
+    drawdown = last / max(closes[-252:]) - 1
+    signals = {
+        "above_ma200": 1 if last > ma200 else -1,
+        "above_ma60": 1 if last > ma60 else -1,
+        "ma20_above_ma60": 1 if ma20 > ma60 else -1,
+        "ret_1m_positive": 1 if ret_1m > 0 else -1,
+        "drawdown": 1 if drawdown > -0.05 else (-1 if drawdown < -0.10 else 0),
+    }
+    return {
+        "last": round(last, 2),
+        "vs_ma60_pct": round((last / ma60 - 1) * 100, 1),
+        "vs_ma200_pct": round((last / ma200 - 1) * 100, 1),
+        "ret_1m_pct": round(ret_1m * 100, 1),
+        "ret_3m_pct": round(ret_3m * 100, 1),
+        "drawdown_from_52w_high_pct": round(drawdown * 100, 1),
+        "score": sum(signals.values()),
+        "signals": signals,
+    }
+
+
+def market_outlook():
+    """規則式趨勢評分：台股加權(權重2)+標普500(權重1)+VIX。非預測。"""
+    data, as_of = {}, {}
+    for name, sym in MARKET_SYMBOLS.items():
+        data[name], as_of[name] = yahoo_closes(sym)
+    taiex, spx = index_stats(data["TAIEX"]), index_stats(data["SPX"])
+    vix_last = data["VIX"][-1]
+    vix_score = 1 if vix_last < 18 else (-1 if vix_last > 25 else 0)
+    total = 2 * taiex["score"] + spx["score"] + vix_score
+    ratio = total / 16
+    if ratio >= 0.55:
+        label = "偏多"
+    elif ratio >= 0.2:
+        label = "中性偏多"
+    elif ratio > -0.2:
+        label = "中性"
+    elif ratio > -0.55:
+        label = "中性偏空"
+    else:
+        label = "偏空"
+    y10, y10_prev = data["US10Y"][-1], data["US10Y"][-22]
+    fx, fx_prev = data["USDTWD"][-1], data["USDTWD"][-22]
+    y10_chg_bp = round((y10 - y10_prev) * 100)
+    fx_chg_pct = round((fx / fx_prev - 1) * 100, 1)
+    risk_flags = []
+    if taiex["vs_ma200_pct"] > 20:
+        risk_flags.append(f"台股高於年線 {taiex['vs_ma200_pct']}%，漲幅過熱")
+    if y10_chg_bp >= 25:
+        risk_flags.append(f"美10年期殖利率 {y10:.2f}%，一個月升 {y10_chg_bp}bp")
+    if fx_chg_pct >= 1.5:
+        risk_flags.append(f"台幣一個月貶值 {fx_chg_pct}%，外資匯損壓力")
+    if label == "偏多" and len(risk_flags) >= 2:
+        label = "中性偏多"
+    return {
+        "outlook": label,
+        "score": total,
+        "score_range": [-16, 16],
+        "risk_flags": risk_flags,
+        "as_of": as_of,
+        "taiex": taiex,
+        "spx": spx,
+        "vix": {"last": round(vix_last, 2), "score": vix_score},
+        "us10y": {"last_pct": round(y10, 2), "chg_1m_bp": y10_chg_bp},
+        "usdtwd": {"last": round(fx, 3), "chg_1m_pct": fx_chg_pct},
+        "method": "規則式趨勢評分(站上季線/年線、均線多排、近一月漲跌、距52週高點、VIX)，台股權重2、美股權重1；風險旗標(過熱、殖利率上升、台幣轉弱)達2項以上則把偏多降為中性偏多。門檻為經驗設定、未經回測驗證，為趨勢判讀而非預測，非投資建議",
+    }
+
+
 def build_text(districts, news):
     parts = []
     for d in districts:
@@ -205,6 +303,10 @@ def main():
     now = datetime.now(TZ)
     districts = [district_report(l, n, ds, key, now) for l, n, ds in DISTRICTS]
     news = fetch_news()
+    try:
+        market = market_outlook()
+    except Exception as exc:  # noqa: BLE001
+        market = {"error": str(exc)}
     out = {
         "generated_at": now.isoformat(timespec="seconds"),
         "date": now.strftime("%Y-%m-%d"),
@@ -212,6 +314,7 @@ def main():
         "brief": build_text(districts, news),
         "districts": districts,
         "news": news,
+        "market": market,
     }
     os.makedirs("data", exist_ok=True)
     with open("data/brief.json", "w", encoding="utf-8") as f:
