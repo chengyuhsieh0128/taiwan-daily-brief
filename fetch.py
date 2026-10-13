@@ -1,12 +1,12 @@
 """每日抓取氣象署鄉鎮預報與中央社頭條，輸出 data/brief.json。僅用標準庫。"""
 import json
 import os
-import re
 import sys
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 
 TZ = timezone(timedelta(hours=8))
 DISTRICTS = [
@@ -14,9 +14,13 @@ DISTRICTS = [
     ("大安", "大安區", "F-D0047-061"),
 ]
 NEWS_FEEDS = [
-    "https://feeds.feedburner.com/cnaFirstNews",
-    "https://news.google.com/rss?hl=zh-TW&gl=TW&ceid=TW:zh-Hant",
+    ("政治", "https://feeds.feedburner.com/rsscna/politics"),
+    ("國際", "https://feeds.feedburner.com/rsscna/intworld"),
+    ("財經", "https://feeds.feedburner.com/rsscna/finance"),
+    ("社會", "https://feeds.feedburner.com/rsscna/social"),
 ]
+NEWS_MAX_AGE_H = 36
+NEWS_PER_CATEGORY = 3
 RAIN_POP = 30
 UMBRELLA_POP = 40
 DAY_START, DAY_END = 6, 24
@@ -126,23 +130,40 @@ def district_report(label, name, dataset, key, today):
 
 
 def fetch_news():
-    last_err = None
-    for url in NEWS_FEEDS:
+    """中央社官方分類 RSS；只收 NEWS_MAX_AGE_H 小時內的新聞，避免舊源混入。"""
+    now = datetime.now(TZ)
+    items, errors = [], []
+    for category, url in NEWS_FEEDS:
         try:
             root = ET.fromstring(http_get(url))
-            items = []
-            for it in root.iter("item"):
-                title = (it.findtext("title") or "").strip()
-                title = re.sub(r"\s+-\s+[^-]+$", "", title) if "news.google" in url else title
-                if title:
-                    items.append({"title": title, "link": (it.findtext("link") or "").strip()})
-                if len(items) >= 5:
-                    break
-            if items:
-                return {"source": url, "items": items}
         except Exception as exc:  # noqa: BLE001
-            last_err = f"{url}: {exc}"
-    return {"source": None, "items": [], "error": last_err}
+            errors.append(f"{category}: {exc}")
+            continue
+        taken = 0
+        for it in root.iter("item"):
+            title = (it.findtext("title") or "").strip()
+            pub = it.findtext("pubDate")
+            if not title or not pub:
+                continue
+            published = parsedate_to_datetime(pub).astimezone(TZ)
+            if now - published > timedelta(hours=NEWS_MAX_AGE_H):
+                continue
+            items.append(
+                {
+                    "category": category,
+                    "title": title,
+                    "published": published.isoformat(timespec="minutes"),
+                    "link": (it.findtext("link") or "").strip(),
+                }
+            )
+            taken += 1
+            if taken >= NEWS_PER_CATEGORY:
+                break
+    items.sort(key=lambda x: x["published"], reverse=True)
+    out = {"source": "中央社 RSS (feeds.feedburner.com/rsscna)", "items": items}
+    if errors:
+        out["errors"] = errors
+    return out
 
 
 def build_text(districts, news):
@@ -161,7 +182,9 @@ def build_text(districts, news):
     text = "；".join(["、".join(parts), temp, umb]) + "。"
     budget = 100 - len(text) - len("頭條：。")
     heads = []
-    for item in news["items"][:2]:
+    order = [c for c, _ in NEWS_FEEDS]
+    ranked = sorted(news["items"], key=lambda x: order.index(x["category"]))
+    for item in ranked[:2]:
         h = item["title"][: min(16, max(budget, 0))].rstrip(" ，、；：-")
         if len(h) >= 6:
             heads.append(h)
