@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-10-14T00:39:47+08:00",
+  "generated_at": "2026-10-14T00:43:41+08:00",
   "date": "2026-10-14",
   "window": "06-24",
-  "brief": "新莊無雨(最高20%)、大安無雨(最高20%)；氣溫22-28°C；不用帶傘。頭條：新台幣繼續衝 早盤再度飆漲逾1元；早安世界》本週2波鋒面接力晴雨交。",
+  "brief": "新莊無雨(最高20%)、大安無雨(最高20%)；氣溫22-28°C；不用帶傘。頭條：華沙安全論壇　林佳龍：「台灣模式；立委籲訂賄選金額標準　卓榮泰呼籲。",
   "districts": [
     {
       "label": "新莊",
@@ -126,27 +126,79 @@
     }
   ],
   "news": {
-    "source": "https://feeds.feedburner.com/cnaFirstNews",
+    "source": "中央社 RSS (feeds.feedburner.com/rsscna)",
     "items": [
       {
-        "title": "新台幣繼續衝 早盤再度飆漲逾1元衝上29元",
-        "link": "https://www.cna.com.tw/news/afe/202505055002.aspx"
+        "category": "國際",
+        "title": "保加利亞黑海岸外船舶遭無人機擊沉　11人下落不明",
+        "published": "2026-10-13T22:50+08:00",
+        "link": "https://www.cna.com.tw/news/aopl/202610130333.aspx"
       },
       {
-        "title": "早安世界》本週2波鋒面接力晴雨交替 6、7日各地恐有大雨",
-        "link": "https://www.cna.com.tw/news/ahel/202505055001.aspx"
+        "category": "國際",
+        "title": "烏克蘭前總司令：俄軍進攻能力受挫　戰歿人數多達烏軍11倍",
+        "published": "2026-10-13T22:47+08:00",
+        "link": "https://www.cna.com.tw/news/aopl/202610130332.aspx"
       },
       {
-        "title": "新台幣開盤為30.91元 早盤勁揚逾8角",
-        "link": "https://www.cna.com.tw/news/afe/202505050023.aspx"
+        "category": "財經",
+        "title": "今彩539第115248期　頭獎1注中獎",
+        "published": "2026-10-13T22:08+08:00",
+        "link": "https://www.cna.com.tw/news/ahel/202610130329.aspx"
       },
       {
-        "title": "「包山包海」部長盧比歐 傳統共和黨人從MAGA世界崛起",
-        "link": "https://www.cna.com.tw/news/aopl/202505050014.aspx"
+        "category": "財經",
+        "title": "大樂透頭獎3.5億元1注獨得　高雄鳳山開出",
+        "published": "2026-10-13T22:05+08:00",
+        "link": "https://www.cna.com.tw/news/ahel/202610130328.aspx"
       },
       {
-        "title": "美眾院將表決涉台法案 解除交往限制、釐清聯大決議",
-        "link": "https://www.cna.com.tw/news/aipl/202505050013.aspx"
+        "category": "國際",
+        "title": "川普宣布能源停火後　俄軍首度未襲烏克蘭這類設施",
+        "published": "2026-10-13T21:51+08:00",
+        "link": "https://www.cna.com.tw/news/aopl/202610130327.aspx"
+      },
+      {
+        "category": "政治",
+        "title": "華沙安全論壇　林佳龍：「台灣模式」助歐洲戰略自主",
+        "published": "2026-10-13T21:48+08:00",
+        "link": "https://www.cna.com.tw/news/aipl/202610130326.aspx"
+      },
+      {
+        "category": "財經",
+        "title": "晶片股再度面臨賣壓　標普與那指雙雙開低",
+        "published": "2026-10-13T21:48+08:00",
+        "link": "https://www.cna.com.tw/news/afe/202610130325.aspx"
+      },
+      {
+        "category": "社會",
+        "title": "新莊外甥涉砍死阿姨　新北檢訊後聲押",
+        "published": "2026-10-13T21:43+08:00",
+        "link": "https://www.cna.com.tw/news/asoc/202610130323.aspx"
+      },
+      {
+        "category": "社會",
+        "title": "高雄議員參選人張騏晟涉賄　限期晚間11時前200萬元交保",
+        "published": "2026-10-13T21:27+08:00",
+        "link": "https://www.cna.com.tw/news/asoc/202610130321.aspx"
+      },
+      {
+        "category": "社會",
+        "title": "海巡署清廉領航講座　實例提醒紀律紅線",
+        "published": "2026-10-13T21:21+08:00",
+        "link": "https://www.cna.com.tw/news/asoc/202610130318.aspx"
+      },
+      {
+        "category": "政治",
+        "title": "立委籲訂賄選金額標準　卓榮泰呼籲參選人勿心存僥倖",
+        "published": "2026-10-13T20:22+08:00",
+        "link": "https://www.cna.com.tw/news/aipl/202610130307.aspx"
+      },
+      {
+        "category": "政治",
+        "title": "美是否應出兵衛台？學者：反對者犯2錯誤　台灣淪陷恐釀3大災難",
+        "published": "2026-10-13T20:04+08:00",
+        "link": "https://www.cna.com.tw/news/aipl/202610130302.aspx"
       }
     ]
   }
